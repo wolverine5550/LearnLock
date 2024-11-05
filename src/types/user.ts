@@ -1,20 +1,20 @@
-export type SubscriptionTier = 'free' | 'premium';
+import { SubscriptionTier, UserSubscription, SUBSCRIPTION_TIERS } from '@/src/types/subscription';
 
-export interface UserSubscription {
-  tier: SubscriptionTier;
-  bookLimit: number;
-  features: string[];
+export interface NotificationPreferences {
+  emailEnabled: boolean;
+  pushEnabled: boolean;
+  defaultReminderTime: number;
+  lastUpdated: Date;
 }
 
-export const SUBSCRIPTION_TIERS: Record<SubscriptionTier, UserSubscription> = {
-  free: {
-    tier: 'free',
-    bookLimit: 1,
-    features: ['Add one book', 'Basic notes', 'Basic memos'],
-  },
-  premium: {
-    tier: 'premium',
-    bookLimit: Infinity,
-    features: ['Unlimited books', 'Advanced notes', 'Priority memos', 'Calendar integration'],
-  },
-}; 
+export interface UserProfile {
+  uid: string;
+  email: string;
+  subscriptionTier: SubscriptionTier;
+  notificationPreferences: NotificationPreferences;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export { SUBSCRIPTION_TIERS };
+export type { SubscriptionTier, UserSubscription };

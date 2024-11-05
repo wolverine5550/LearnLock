@@ -1,0 +1,35 @@
+.fc {
+  --fc-border-color: hsl(var(--border));
+  --fc-button-text-color: hsl(var(--foreground));
+  --fc-button-bg-color: hsl(var(--background));
+  --fc-button-border-color: hsl(var(--border));
+  --fc-button-hover-bg-color: hsl(var(--accent));
+  --fc-button-hover-border-color: hsl(var(--accent));
+  --fc-button-active-bg-color: hsl(var(--accent));
+  --fc-button-active-border-color: hsl(var(--accent));
+}
+
+.fc .fc-button {
+  @apply rounded-md text-sm font-medium ring-offset-background transition-colors 
+    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+}
+
+.fc .fc-event {
+  @apply border-none rounded-md shadow-sm;
+}
+
+.event-type-meeting {
+  @apply bg-blue-100 text-blue-900;
+}
+
+.event-type-presentation {
+  @apply bg-green-100 text-green-900;
+}
+
+.event-type-interview {
+  @apply bg-purple-100 text-purple-900;
+}
+
+.event-type-other {
+  @apply bg-gray-100 text-gray-900;
+} 
