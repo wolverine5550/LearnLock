@@ -1,42 +1,92 @@
-import { updateMemo } from '@/src/lib/memos';
+import { 
+  collection,
+  doc,
+  addDoc,
+  getDoc,
+  updateDoc,
+  serverTimestamp,
+  Timestamp,
+  increment,
+} from 'firebase/firestore';
+import { db } from '@/src/lib/firebase';
+import { nanoid } from 'nanoid';
+import type { SharedMemo, ShareOptions, ShareResponse } from '@/src/types/share';
 import type { Memo } from '@/src/types/memo';
 
-export async function generateShareableLink(memo: Memo): Promise<string> {
-  // In a real app, we might:
-  // 1. Generate a unique token
-  // 2. Store it in the database
-  // 3. Create an expiring link
-  
-  // For now, we'll create a simple share URL
-  const shareUrl = `${window.location.origin}/shared/memos/${memo.id}`;
-  
-  // Mark memo as shared
-  await updateMemo(memo.id, { shared: true });
-  
-  return shareUrl;
+const SHARED_MEMOS_COLLECTION = 'sharedMemos';
+
+export async function createSharedMemo(
+  memo: Memo,
+  options: ShareOptions
+): Promise<ShareResponse> {
+  try {
+    const shareId = nanoid(10); // Generate short unique ID for share link
+    const shareLink = `${window.location.origin}/shared/${shareId}`;
+
+    const sharedMemoData: Omit<SharedMemo, 'id'> = {
+      memoId: memo.id,
+      userId: memo.userId,
+      shareMethod: options.recipientEmail ? 'email' : 'link',
+      sharedAt: Timestamp.now(),
+      expiresAt: options.expiresIn 
+        ? Timestamp.fromMillis(Date.now() + options.expiresIn * 60 * 60 * 1000)
+        : undefined,
+      accessCount: 0,
+      shareLink,
+      isPublic: options.isPublic,
+      allowComments: options.allowComments,
+      recipientEmail: options.recipientEmail,
+    };
+
+    const docRef = await addDoc(collection(db, SHARED_MEMOS_COLLECTION), sharedMemoData);
+
+    return {
+      shareId: docRef.id,
+      shareLink,
+      expiresAt: sharedMemoData.expiresAt,
+    };
+  } catch (error) {
+    console.error('Error creating shared memo:', error);
+    throw error;
+  }
 }
 
-export async function shareViaEmail(memo: Memo, recipientEmail: string): Promise<void> {
-  // In a real app, we'd use an email service
-  // For now, we'll use mailto
-  const subject = encodeURIComponent('Shared Memo from LearnLock');
-  const body = encodeURIComponent(`
-    Check out this memo: ${window.location.origin}/shared/memos/${memo.id}
-    
-    ${memo.content}
-  `);
-  
-  window.location.href = `mailto:${recipientEmail}?subject=${subject}&body=${body}`;
+export async function getSharedMemo(shareId: string): Promise<SharedMemo | null> {
+  try {
+    const docRef = doc(db, SHARED_MEMOS_COLLECTION, shareId);
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) return null;
+
+    const sharedMemo = { id: docSnap.id, ...docSnap.data() } as SharedMemo;
+
+    // Check if share has expired
+    if (sharedMemo.expiresAt && sharedMemo.expiresAt.toMillis() < Date.now()) {
+      return null;
+    }
+
+    // Update access count and last accessed
+    await updateDoc(docRef, {
+      accessCount: increment(1),
+      lastAccessed: serverTimestamp(),
+    });
+
+    return sharedMemo;
+  } catch (error) {
+    console.error('Error getting shared memo:', error);
+    throw error;
+  }
 }
 
-export async function shareViaSocialMedia(memo: Memo, platform: 'twitter' | 'linkedin'): Promise<void> {
-  const url = encodeURIComponent(`${window.location.origin}/shared/memos/${memo.id}`);
-  const text = encodeURIComponent('Check out this memo from LearnLock!');
-  
-  const shareUrls = {
-    twitter: `https://twitter.com/intent/tweet?url=${url}&text=${text}`,
-    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${url}`,
-  };
-  
-  window.open(shareUrls[platform], '_blank');
+export async function updateSharedMemo(
+  shareId: string,
+  updates: Partial<SharedMemo>
+): Promise<void> {
+  try {
+    const docRef = doc(db, SHARED_MEMOS_COLLECTION, shareId);
+    await updateDoc(docRef, updates);
+  } catch (error) {
+    console.error('Error updating shared memo:', error);
+    throw error;
+  }
 } 

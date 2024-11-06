@@ -1,16 +1,13 @@
 import { Timestamp } from 'firebase/firestore';
 
-export type MemoFormat = 'bullet' | 'narrative' | 'framework';
-export type MemoStatus = 'pending' | 'generated' | 'failed';
-
 export interface Memo {
   id: string;
   eventId: string;
   userId: string;
+  title: string;
   content: string;
-  format: MemoFormat;
-  status: MemoStatus;
-  bookIds: string[];
+  format: 'bullet' | 'narrative' | 'framework';
+  status: 'pending' | 'generated' | 'failed';
   generated: Timestamp;
   viewed: boolean;
   shared: boolean;
