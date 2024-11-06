@@ -23,6 +23,8 @@ import { CalendarView } from "@/src/components/events/CalendarView";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useReminders } from "@/src/hooks/useReminders";
 import { NotificationPreferences } from "@/src/components/events/NotificationPreferences";
+import { MemoPreview } from "@/src/components/memos/MemoPreview";
+import { useMemos } from "@/src/hooks/useMemos";
 
 export function EventList() {
   const { events, loading, refetch } = useEvents();
@@ -160,6 +162,15 @@ export function EventList() {
                               {event.memoPreferences.format} format, {event.memoPreferences.sendTime} hours before
                             </p>
                           </div>
+                        </div>
+                        <div className="mt-4">
+                          <MemoPreview
+                            event={event}
+                            books={books.filter(book => 
+                              event.bookIds.includes(book.id)
+                            )}
+                            format={event.memoPreferences.format}
+                          />
                         </div>
                       </CardContent>
                     </Card>
