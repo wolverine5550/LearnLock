@@ -1,4 +1,7 @@
 import { Event } from '@/src/types/event';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { db } from '@/src/lib/firebase';
+import type { NotificationPreferences } from '@/src/types/notifications';
 
 export async function requestNotificationPermission(): Promise<boolean> {
   if (!('Notification' in window)) {
@@ -53,6 +56,36 @@ export async function scheduleNotification(event: Event) {
     return true;
   } catch (error) {
     console.error('Error scheduling notification:', error);
+    throw error;
+  }
+}
+
+export async function getUserNotificationPreferences(
+  userId: string
+): Promise<NotificationPreferences | null> {
+  try {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (!userDoc.exists()) return null;
+
+    return userDoc.data().notificationPreferences || null;
+  } catch (error) {
+    console.error('Error getting notification preferences:', error);
+    throw error;
+  }
+}
+
+export async function updateNotificationPreferences(
+  userId: string,
+  preferences: Partial<NotificationPreferences>
+): Promise<void> {
+  try {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      'notificationPreferences': preferences,
+      'updatedAt': new Date(),
+    });
+  } catch (error) {
+    console.error('Error updating notification preferences:', error);
     throw error;
   }
 } 
