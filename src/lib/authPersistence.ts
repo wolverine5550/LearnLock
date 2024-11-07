@@ -8,6 +8,8 @@ export class AuthPersistenceManager {
 
   static async setPersistenceLevel(level: PersistenceLevel) {
     try {
+      if (typeof window === 'undefined') return; // Check for browser environment
+
       switch (level) {
         case 'local':
           await setPersistence(auth, browserLocalPersistence);
@@ -31,6 +33,8 @@ export class AuthPersistenceManager {
   }
 
   static getPersistenceLevel(): PersistenceLevel {
+    if (typeof window === 'undefined') return 'none'; // Check for browser environment
+
     const localLevel = localStorage.getItem(this.PERSISTENCE_KEY) as PersistenceLevel;
     const sessionLevel = sessionStorage.getItem(this.PERSISTENCE_KEY) as PersistenceLevel;
     
@@ -38,6 +42,8 @@ export class AuthPersistenceManager {
   }
 
   static clearPersistedAuth() {
+    if (typeof window === 'undefined') return; // Check for browser environment
+
     localStorage.removeItem(this.PERSISTENCE_KEY);
     sessionStorage.removeItem(this.PERSISTENCE_KEY);
   }
